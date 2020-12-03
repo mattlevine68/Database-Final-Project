@@ -2,11 +2,10 @@ import psycopg2
 import psycopg2.extras
 import utils
 import numpy as np
+import pymongo
 from argparse import ArgumentParser
 from collections import defaultdict
 
-# Read data from csv in panda
-# INSERT into tables
 
 ag = ArgumentParser(description="Database configuration")
 ag.add_argument("--host", dest='host', default='localhost')
@@ -49,7 +48,10 @@ class CollegeData:
         self.conn.commit()
 
     def insert_college(self, college_df):
-        pass
+        tuples = [tuple(x) for x in college_df.to_numpy()]
+        query = """ INSERT INTO college
+        VALUES(%s,%s,%s,%s,%s,%s,%s,%s)"""
+        self.execute_many(query, tuples)
 
     def insert_historical(self, historical_df):
         tuples = [tuple(x) for x in historical_df.to_numpy()]
@@ -69,11 +71,20 @@ class CollegeData:
         VALUES(%s,%s,%s,%s)"""
         self.execute_many(query, tuples)
 
+    def insert_student(self, student_df):
+        tuples = [tuple(x) for x in student_df.to_numpy()]
+        query = """ INSERT INTO college_students
+        VALUES(%s,%s,%s,%s,%s,%s,%s)"""
+        self.execute_many(query, tuples)
+
 if __name__ == '__main__':
     college = CollegeData(conn_string)
     historical_df = utils.loaddata_historical()
     # college.insert_historical(historical_df)
     college_df, student_df = utils.loaddata_college()
+
+    # college.insert_college(college_df)
+    # college.insert_student(student_df)
 
     #Won't work until college is there
     diversity_df = utils.loaddata_diversity()

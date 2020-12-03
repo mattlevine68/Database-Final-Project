@@ -8,11 +8,11 @@ DROP TABLE IF EXISTS college_diversity CASCADE;
 
 CREATE TABLE college(
     collegeid VARCHAR(127) PRIMARY KEY,
-    state CHAR(2),
+    state VARCHAR(63),
     type VARCHAR(31),
-    applications INT,
-    accepted INT,
-    enrolled INT,
+    applications BIGINT,
+    accepted BIGINT,
+    enrolled BIGINT,
     professor_with_phd FLOAT,
     faculity_with_terminal FLOAT
 
