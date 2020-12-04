@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS college CASCADE;
+DROP TABLE IF EXISTS college_statistics CASCADE;
 DROP TABLE IF EXISTS college_students CASCADE;
 DROP TABLE IF EXISTS college_tuition CASCADE;
 DROP TABLE IF EXISTS historical_tuition CASCADE;
@@ -8,14 +9,17 @@ DROP TABLE IF EXISTS college_diversity CASCADE;
 
 CREATE TABLE college(
     collegeid VARCHAR(127) PRIMARY KEY,
-    state VARCHAR(63),
-    type VARCHAR(31),
-    applications BIGINT,
-    accepted BIGINT,
-    enrolled BIGINT,
-    professor_with_phd FLOAT,
-    faculity_with_terminal FLOAT
+    state VARCHAR(63)
+);
 
+CREATE TABLE college_statistics(
+  collegeid VARCHAR(127) REFERENCES college,
+  type VARCHAR(31),
+  applications INT,
+  accepted INT,
+  enrolled INT,
+  professor_with_phd FLOAT,
+  faculity_with_terminal FLOAT
 );
 
 CREATE TABLE college_students(
@@ -33,8 +37,6 @@ CREATE TABLE college_tuition(
     yearid INT,
     degree_length SMALLINT,
     room_board INT,
-    books INT,
-    personal INT,
     in_state INT,
     out_of_state INT,
     PRIMARY KEY(collegeid, yearid)
@@ -44,7 +46,8 @@ CREATE TABLE historical_tuition(
     college_type VARCHAR(127),
     yearid  INT,
     tuiton_type VARCHAR(127),
-    tuition_cost INT
+    tuition_cost INT,
+    PRIMARY KEY(college_type, yearid, tuiton_type)
 );
 
 CREATE TABLE college_salary(
@@ -60,4 +63,105 @@ CREATE TABLE college_diversity(
     enrollment INT
 );
 
-GRANT ALL PRIVILEGES ON college, college_students, college_tuition, historical_tuition, college_salary, college_diversity TO project_user;
+GRANT ALL PRIVILEGES ON college, college_students, college_statistics, college_tuition, historical_tuition, college_salary, college_diversity TO project_user;
+
+DROP FUNCTION IF EXISTS verify_college;
+DROP FUNCTION IF EXISTS verify_new;
+DROP FUNCTION IF EXISTS verify_new_historical;
+
+CREATE FUNCTION verify_college() RETURNS TRIGGER
+AS $$
+BEGIN
+  IF EXISTS (SELECT collegeid FROM college WHERE collegeid = NEW.collegeid)
+    THEN RETURN NEW;
+    ELSE RETURN NULL;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION verify_new() RETURNS TRIGGER
+AS $$
+BEGIN
+  IF EXISTS (SELECT collegeid FROM college WHERE collegeid = NEW.collegeid)
+    THEN RETURN NULL;
+    ELSE RETURN NEW;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE FUNCTION verify_new_historical() RETURNS TRIGGER
+AS $$
+BEGIN
+  IF EXISTS (SELECT college_type
+            FROM historical_tuition
+            WHERE college_type = NEW.college_type
+            AND yearid = NEW.yearid
+            AND tuiton_type = NEW.tuiton_type)
+
+    THEN RETURN NULL;
+    ELSE RETURN NEW;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE TRIGGER verify_college_student_trigger
+BEFORE INSERT ON college_students
+FOR EACH ROW
+EXECUTE PROCEDURE verify_college();
+
+CREATE TRIGGER verify_college_statistic_trigger
+BEFORE INSERT ON college_statistics
+FOR EACH ROW
+EXECUTE PROCEDURE verify_college();
+
+CREATE TRIGGER verify_college_tuition_trigger
+BEFORE INSERT ON college_tuition
+FOR EACH ROW
+EXECUTE PROCEDURE verify_college();
+
+CREATE TRIGGER verify_college_salary_trigger
+BEFORE INSERT ON college_salary
+FOR EACH ROW
+EXECUTE PROCEDURE verify_college();
+
+CREATE TRIGGER verify_college_diversity_trigger
+BEFORE INSERT ON college_diversity
+FOR EACH ROW
+EXECUTE PROCEDURE verify_college();
+
+
+CREATE TRIGGER duplicate_college
+BEFORE INSERT ON college
+FOR EACH ROW
+EXECUTE PROCEDURE verify_new();
+
+CREATE TRIGGER duplicate_college_student_trigger
+BEFORE INSERT ON college_students
+FOR EACH ROW
+EXECUTE PROCEDURE verify_new();
+
+CREATE TRIGGER duplicate_college_statistic_trigger
+BEFORE INSERT ON college_statistics
+FOR EACH ROW
+EXECUTE PROCEDURE verify_new();
+
+CREATE TRIGGER duplicate_college_tuition_trigger
+BEFORE INSERT ON college_tuition
+FOR EACH ROW
+EXECUTE PROCEDURE verify_new();
+
+CREATE TRIGGER duplicate_college_historical_trigger
+BEFORE INSERT ON historical_tuition
+FOR EACH ROW
+EXECUTE PROCEDURE verify_new_historical();
+
+CREATE TRIGGER duplicate_college_salary_trigger
+BEFORE INSERT ON college_salary
+FOR EACH ROW
+EXECUTE PROCEDURE verify_new();
+
+CREATE TRIGGER duplicate_college_diversity_trigger
+BEFORE INSERT ON college_diversity
+FOR EACH ROW
+EXECUTE PROCEDURE verify_new();

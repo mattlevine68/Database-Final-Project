@@ -50,7 +50,7 @@ class CollegeData:
     def insert_college(self, college_df):
         tuples = [tuple(x) for x in college_df.to_numpy()]
         query = """ INSERT INTO college
-        VALUES(%s,%s,%s,%s,%s,%s,%s,%s)"""
+        VALUES(%s,%s)"""
         self.execute_many(query, tuples)
 
     def insert_historical(self, historical_df):
@@ -77,18 +77,34 @@ class CollegeData:
         VALUES(%s,%s,%s,%s,%s,%s,%s)"""
         self.execute_many(query, tuples)
 
+    def insert_statistic(self, statistic_df):
+        tuples = [tuple(x) for x in statistic_df.to_numpy()]
+        query = """ INSERT INTO college_statistics
+        VALUES(%s,%s,%s,%s,%s,%s,%s)"""
+        self.execute_many(query, tuples)
+
+    def insert_tuition(self, tuition_df):
+        tuples = [tuple(x) for x in tuition_df.to_numpy()]
+        query = """ INSERT INTO college_tuition
+        VALUES(%s,%s,%s,%s,%s,%s)"""
+        self.execute_many(query, tuples)
+
 if __name__ == '__main__':
     college = CollegeData(conn_string)
+
+    college_df, student_df, statistic_df = utils.loaddata_college()
+    college.insert_college(college_df)
+    college.insert_student(student_df)
+    college.insert_statistic(statistic_df)
+
+    tuition_df = utils.loaddata_tuition()
+    college.insert_tuition(tuition_df)
+
     historical_df = utils.loaddata_historical()
-    # college.insert_historical(historical_df)
-    college_df, student_df = utils.loaddata_college()
+    college.insert_historical(historical_df)
 
-    # college.insert_college(college_df)
-    # college.insert_student(student_df)
-
-    #Won't work until college is there
     diversity_df = utils.loaddata_diversity()
-    #college.insert_diversity(diversity_df)
+    college.insert_diversity(diversity_df)
 
     salary_df = utils.loaddata_salary()
-    #college.insert_salary(salary_df)
+    college.insert_salary(salary_df)
