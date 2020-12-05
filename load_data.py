@@ -10,7 +10,9 @@ from collections import defaultdict
 ag = ArgumentParser(description="Database configuration")
 ag.add_argument("--host", dest='host', default='localhost')
 args = ag.parse_args()
+#PSQL string
 conn_string = f"host='{args.host}' dbname='final_project' user='project_user' password='goodGrades'"
+
 
 class CollegeData:
 
@@ -18,11 +20,11 @@ class CollegeData:
         self.conn = psycopg2.connect(connection_string)
         self.cursor = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-    # def setUp(self):
-    #     with self.cursor as cursor:
-    #         setup_queries = open('college-data.sql', 'r').read()
-    #         cursor.execute(setup_queries)
-    #         self.conn.commit()
+    def setUp(self):
+        with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+            setup_queries = open('college-data.sql', 'r').read()
+            cursor.execute(setup_queries)
+        self.conn.commit()
 
     def check_connectivity(self):
         cursor = self.conn.cursor()
@@ -89,22 +91,55 @@ class CollegeData:
         VALUES(%s,%s,%s,%s,%s,%s)"""
         self.execute_many(query, tuples)
 
+class SportsData:
+    def __init__(self):
+        self.myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+        self.db = self.myclient['college_sport']
+
+    def insert_data(self, col, data):
+        insert = None
+        try:
+            insert = col.insert_many(data)
+        except Exception as e:
+            print(e)
+        if not insert:
+            return
+
+    def insert_basketball(self, basketball_data):
+        mycol = self.db['basketball']
+        self.insert_data(mycol, data)
+
+    def insert_football(self, football_data):
+        mycol = self.db['football']
+        self.insert_data(mycol, football_data)
+
 if __name__ == '__main__':
-    college = CollegeData(conn_string)
+    #PSQL
+    # college = CollegeData(conn_string)
+    #
+    # college.setUp()
+    #
+    # college_df, student_df, statistic_df = utils.loaddata_college()
+    # college.insert_college(college_df)
+    # college.insert_student(student_df)
+    # college.insert_statistic(statistic_df)
+    #
+    # tuition_df = utils.loaddata_tuition()
+    # college.insert_tuition(tuition_df)
+    #
+    # historical_df = utils.loaddata_historical()
+    # college.insert_historical(historical_df)
+    #
+    # diversity_df = utils.loaddata_diversity()
+    # college.insert_diversity(diversity_df)
+    #
+    # salary_df = utils.loaddata_salary()
+    # college.insert_salary(salary_df)
 
-    college_df, student_df, statistic_df = utils.loaddata_college()
-    college.insert_college(college_df)
-    college.insert_student(student_df)
-    college.insert_statistic(statistic_df)
+    #Mongo
+    sports = SportsData()
+    # basketball_data = utils.loaddata_basketball()
+    # sports.insert_basketball(basketball_data)
 
-    tuition_df = utils.loaddata_tuition()
-    college.insert_tuition(tuition_df)
-
-    historical_df = utils.loaddata_historical()
-    college.insert_historical(historical_df)
-
-    diversity_df = utils.loaddata_diversity()
-    college.insert_diversity(diversity_df)
-
-    salary_df = utils.loaddata_salary()
-    college.insert_salary(salary_df)
+    football_data = utils.loaddata_football()
+    sports.insert_football(football_data)
