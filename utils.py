@@ -119,6 +119,7 @@ def loaddata_football():
         if football_df.at[i,'Team'][-1] == '.':
             football_df.at[i,'Team'] = football_df.at[i,'Team'][:index-1][:-1]
         data = {
+            '_id' : i,
             'Conference' : football_df.at[i,'Conference'],
             'Win' : football_df.at[i,'Win'],
             'Loss' : football_df.at[i,'Loss'],
