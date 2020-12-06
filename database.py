@@ -1,8 +1,3 @@
-# - Five separate queries
-# - At least two queries that select at least some data from both of your datasets
-# - At least two queries that showcase syntax beyond the basic `SELECT-FROM-WHERE` clauses (e.g., Grouping, Subqueries, etc.)
-# - At least two queries that accept input entered by the user (as opposed to just allowing selection from a list of options)
-
 import psycopg2
 import psycopg2.extras
 import utils
@@ -14,7 +9,7 @@ from collections import defaultdict
 
 
 class CollegeQuery:
-
+    #Sets up access to both psql database and mongo database
     def __init__(self, connection_string):
         self.conn = psycopg2.connect(connection_string)
         self.cursor = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -31,20 +26,18 @@ class CollegeQuery:
         self.cursor.execute(query, params)
         rst = self.cursor.fetchall()
         return rst
-
-    def print_records(self, records):
-        for record in records:
-            print(record)
-
-    def query_mongo(self, table, query):
-        my_col = self.db[table]
+    # Simple query caller for mongo takes in the collection to work with and the query
+    def query_mongo(self, collection, query):
+        my_col = self.db[collection]
         my_doc = my_col.find(query)
-        rst = []
         return my_doc
 
-    # Which school and state has the most diversity and whats the tuition
-    def diversity_query(self, Limit):
-        if Limit.isdigit():
+    # Diversity Query on GUI
+    def diversity_query(self, limit):
+        #Checks if user inputed a limit on the GUI uses one of two queries if they didn't (Both queries do the same thing just the
+        #amount of results is different). This query outputs the total amount of minorities enrolled in a school along with the possible tuition
+        #order by minorities enrolled
+        if limit.isdigit():
             query = """
             SELECT ce.collegeid AS college, c.state, ce.enrollment_total AS minorities_enrolled, ct.in_state, ct.out_of_state
             FROM college c, (SELECT collegeid, SUM(enrollment) AS enrollment_total
@@ -53,9 +46,9 @@ class CollegeQuery:
             JOIN college_tuition ct ON ct.collegeid = ce.collegeid
             WHERE ce.collegeid = c.collegeid
             ORDER BY ce.enrollment_total DESC
-            LIMIT %(Limit)s;
+            LIMIT %(limit)s;
             """
-            params = {'Limit':Limit}
+            params = {'limit': limit}
             diversity_query_results = self.query_with_params(query,params)
         else:
             query = """
@@ -68,13 +61,18 @@ class CollegeQuery:
             ORDER BY ce.enrollment_total DESC;
             """
             diversity_query_results = self.query_with_params(query)
+
+        #All results are put in pandas to look nicer
         query_result_df = pd.DataFrame(diversity_query_results, columns=['college', 'state', 'Minorities Enrolled',
         'In State Tuition', 'Out Of State Tuition'])
         print(query_result_df)
 
-    # Which schools have the highest percent stem and make the most in there early_career (allow user to choose state if they want)
-    def career_query(self, Limit, state):
-        if Limit.isdigit() and state:
+    # Career Stem Query on GUI
+    def career_query(self, limit, state):
+        #Queries percent of stem students and early career salary and organizes the results by the amount of students in stem.
+        #There are multiple queries so the user can choose if they want to limit the results and if they want to only have results
+        #For a specific state
+        if limit.isdigit() and state:
             query = """
             SELECT cst.collegeid, c.state, cst.percent_stem, cs.early_career
             FROM college_students cst
@@ -83,11 +81,11 @@ class CollegeQuery:
             WHERE cst.percent_stem IS NOT NULL
             AND c.state = %(state)s
             ORDER BY percent_stem DESC
-            LIMIT %(Limit)s;
+            LIMIT %(limit)s;
             """
-            params = {'Limit':Limit, 'state': state }
+            params = {'limit': limit, 'state': state }
             career_query_results = self.query_with_params(query,params)
-        elif Limit.isdigit() and not state:
+        elif limit.isdigit() and not state:
             query = """
             SELECT cst.collegeid, c.state, cst.percent_stem, cs.early_career
             FROM college_students cst
@@ -95,11 +93,11 @@ class CollegeQuery:
             JOIN college_salary cs ON cs.collegeid = cst.collegeid
             WHERE cst.percent_stem IS NOT NULL
             ORDER BY percent_stem DESC
-            LIMIT %(Limit)s;
+            LIMIT %(limit)s;
             """
-            params = {'Limit':Limit}
+            params = {'limit' : limit}
             career_query_results = self.query_with_params(query, params)
-        elif not Limit.isdigit() and state:
+        elif not limit.isdigit() and state:
             query = """
             SELECT cst.collegeid, c.state, cst.percent_stem, cs.early_career
             FROM college_students cst
@@ -121,19 +119,24 @@ class CollegeQuery:
             ORDER BY percent_stem DESC;
             """
             career_query_results = self.query_with_params(query)
+
+        #All results are put in pandas to look nicer
         query_result_df = pd.DataFrame(career_query_results, columns=['college', 'state', 'percent of student in stem',
         'early career salary'])
         print(query_result_df)
 
-    #Which teams had a win percent over 80% in either basketball and football and enrolled over (let them choose)
+    #Winning Enrolled Query on GUI
     def team_query(self, win_percent, enrolled):
+        #Need defaults in case user does not put anything
         if not win_percent:
             win_percent = .8
         if not enrolled:
             enrolled = 5000
         win_percent = float(win_percent)
-        enrolled = float(enrolled)
+        enrolled = int(enrolled)
 
+        #MongoDB queries, since non-relational two seperate queies to see if win percent is greater then user inputed on
+        #Results are put into a set to make sure there are no repeats and then put in array form for psql
         my_query = {'Win Percent': {'$gt' : win_percent}}
         basketball_dict = self.query_mongo('basketball', my_query)
         football_dict = self.query_mongo('football', my_query)
@@ -142,9 +145,9 @@ class CollegeQuery:
             teams_set.add('%'+str(i['Team'])+'%')
         for i in football_dict:
             teams_set.add('%'+str(i['Team'])+'%')
-
         teams = list(teams_set)
 
+        #PSQL query to see if results exist in tables along with user inputed enrolled and what type of school
         query = """
         SELECT c.collegeid, c.state, cs.enrolled, cs.type
         FROM college c, college_statistics cs
@@ -153,13 +156,20 @@ class CollegeQuery:
         AND enrolled >= %(enrolled)s
         ORDER BY cs.enrolled;
         """
-        params = {'teams': teams, 'enrolled':enrolled}
+        params = {'teams': teams, 'enrolled': enrolled}
         query_results = self.query_with_params(query,params)
+
+        #All results are put in pandas to look nicer
         query_result_df = pd.DataFrame(query_results, columns=['college', 'state', 'enrolled', 'public or private'])
         print(query_result_df)
 
-    #Which state has the worst grad rate but the highest tuition
-    def worst_grad_rate_query(self):
+    # Grad Rate Query on GUI
+    def worst_grad_rate_query(self, samples):
+        if not samples:
+            samples = 5
+        samples = int(samples)
+        # query average results of grad_rate, number of fulltime undergrads, in state tuition, out state tuition and students
+        # who believe they are making a difference, allows user options to have a minimum of samples in each state
         query = """
             SELECT c.state, ROUND(AVG(CAST(cs.grad_rate AS NUMERIC)),2) AS grad_rate_avg, ROUND(AVG(CAST(cs.fulltime_undergrad AS NUMERIC)),2) AS fulltime_undergrad_AVG,
             ROUND(AVG(CAST(ct.in_state AS NUMERIC)),2) AS in_state_avg, ROUND(AVG(CAST(ct.out_of_state AS NUMERIC)),2) AS out_of_state_avg,
@@ -169,17 +179,28 @@ class CollegeQuery:
             AND c.collegeid = ct.collegeid
             AND c.collegeid = csa.collegeid
             GROUP BY c.state
+            HAVING COUNT(cs.grad_rate) > %(samples)s
             ORDER BY grad_rate_avg ASC;
             """
-        worst_grad_results = self.query_with_params(query)
+        params = {'samples':  samples}
+        worst_grad_results = self.query_with_params(query, params)
+
+        #All results are put in pandas to look nicer
         query_result_df = pd.DataFrame(worst_grad_results, columns=['State', 'Grad Rate AVG', 'Fulltime Undergrad AVG',
         'In State Tuition AVG', 'Out Of State Tuition AVG', 'Making A Difference AVG' ])
         print(query_result_df)
 
-    #Do schools with the highest win percantage in both football and basketball have a lot of professors with phds and how many students are in stem
-    def sport_query(self):
-        my_query_basketball = {'$and' : [{ 'Power Rating': { '$gt' : .8}}, {'Playoff.Wins Cutoff': { '$gt' : 0}}]}
-        my_query_football = {'$and': [{ '$expr' : { '$gt' : ["$Loss", "$Win"]} } , {'Offensive.Rank': { '$lt' : 10}}]}
+    # Winning Tech Query on GUI
+    def sport_query(self, limit, power_rating, offensive_rank):
+        if not power_rating:
+            power_rating = .8
+        if not offensive_rank:
+            offensive_rank = 10
+        #MongoDB queries, basketball query checks if it has a certain power rating (likelihood of beating a D1 team) and if they made the playoffs.
+        #Football query checks if a team that had more losses than wins had a certain offensive rank
+        #Results are put into a set to make sure there are no repeats and then put in array form for psql
+        my_query_basketball = {'$and' : [{ 'Power Rating': { '$gt' : float(power_rating)}}, {'Playoff.Wins Cutoff': { '$gt' : 0}}]}
+        my_query_football = {'$and': [{ '$expr' : { '$gt' : ["$Loss", "$Win"]} } , {'Offensive.Rank': { '$lt' : int(offensive_rank)}}]}
         basketball_dict = self.query_mongo('basketball', my_query_basketball)
         football_dict = self.query_mongo('football', my_query_football)
         teams_set = set()
@@ -187,17 +208,37 @@ class CollegeQuery:
             teams_set.add('%'+str(i['Team'])+'%')
         for i in football_dict:
             teams_set.add('%'+str(i['Team'])+'%')
-
         teams = list(teams_set)
 
-        query = """
-        SELECT c.collegeid, c.state, cs.professor_with_phd, cst.percent_stem
-        FROM college c, college_statistics cs, college_students cst
-        WHERE c.collegeid = cs.collegeid
-        AND c.collegeid = cst.collegeid
-        AND c.collegeid LIKE ANY(%(teams)s);
-        """
-        params = {'teams': teams}
+        #Option to limit results both queries check if a school that's true for either the football or basketball mongo query has professors with a phd or
+        #students in stem
+        if limit:
+            query = """
+            SELECT c.collegeid, c.state, cs.professor_with_phd, cst.percent_stem
+            FROM college c, college_statistics cs, college_students cst
+            WHERE c.collegeid = cs.collegeid
+            AND c.collegeid = cst.collegeid
+            AND c.collegeid LIKE ANY(%(teams)s)
+            AND cst.percent_stem IS NOT NULL
+            ORDER BY cs.professor_with_phd DESC, cst.percent_stem
+            LIMIT %(limit)s;
+            """
+            params = {'teams': teams, 'limit' : int(limit)}
+
+        else:
+            query = """
+            SELECT c.collegeid, c.state, cs.professor_with_phd, cst.percent_stem
+            FROM college c, college_statistics cs, college_students cst
+            WHERE c.collegeid = cs.collegeid
+            AND c.collegeid = cst.collegeid
+            AND c.collegeid LIKE ANY(%(teams)s)
+            AND cst.percent_stem IS NOT NULL
+            ORDER BY cs.professor_with_phd DESC, cst.percent_stem;
+            """
+            params = {'teams': teams}
+
         query_results = self.query_with_params(query,params)
+
+        #All results are put in pandas to look nicer
         query_result_df = pd.DataFrame(query_results, columns=['College', 'State', 'Professors with PhD', 'Percent of students in Stem'])
         print(query_result_df)
