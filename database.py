@@ -150,13 +150,13 @@ class CollegeQuery:
         FROM college c, college_statistics cs
         WHERE c.collegeid = cs.collegeid
         AND c.collegeid LIKE ANY(%(teams)s)
-        AND enrolled >= %(enrolled)s;
+        AND enrolled >= %(enrolled)s
+        ORDER BY cs.enrolled;
         """
         params = {'teams': teams, 'enrolled':enrolled}
         query_results = self.query_with_params(query,params)
         query_result_df = pd.DataFrame(query_results, columns=['college', 'state', 'enrolled', 'public or private'])
         print(query_result_df)
-
 
     #Which state has the worst grad rate but the highest tuition
     def worst_grad_rate_query(self):
@@ -178,4 +178,26 @@ class CollegeQuery:
 
     #Do schools with the highest win percantage in both football and basketball have a lot of professors with phds and how many students are in stem
     def sport_query(self):
-        pass
+        my_query_basketball = {'$and' : [{ 'Power Rating': { '$gt' : .8}}, {'Playoff.Wins Cutoff': { '$gt' : 0}}]}
+        my_query_football = {'$and': [{ '$expr' : { '$gt' : ["$Loss", "$Win"]} } , {'Offensive.Rank': { '$lt' : 10}}]}
+        basketball_dict = self.query_mongo('basketball', my_query_basketball)
+        football_dict = self.query_mongo('football', my_query_football)
+        teams_set = set()
+        for i in basketball_dict:
+            teams_set.add('%'+str(i['Team'])+'%')
+        for i in football_dict:
+            teams_set.add('%'+str(i['Team'])+'%')
+
+        teams = list(teams_set)
+
+        query = """
+        SELECT c.collegeid, c.state, cs.professor_with_phd, cst.percent_stem
+        FROM college c, college_statistics cs, college_students cst
+        WHERE c.collegeid = cs.collegeid
+        AND c.collegeid = cst.collegeid
+        AND c.collegeid LIKE ANY(%(teams)s);
+        """
+        params = {'teams': teams}
+        query_results = self.query_with_params(query,params)
+        query_result_df = pd.DataFrame(query_results, columns=['College', 'State', 'Professors with PhD', 'Percent of students in Stem'])
+        print(query_result_df)
