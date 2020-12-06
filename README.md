@@ -28,23 +28,36 @@
 # Descriptions of Queries in application.py:
   ## Career Stem Query:
     - Options for input (Limit, State)
-    - Return the college, state, percent of students in stem and how much students make early career where we have data for percent of students in stem. Users have the option to get total result or results of a specific state and can limit how many results they see.
+    - Return the college, state, percent of students in stem and how much students make early career where we have 
+      data for percent of students in stem. Users have the option to get total result or results of a specific state
+      and can limit how many results they see.
 
   ## Diversity Query:
     - Options for input (Limit)
-    - Returns the college, state, how many minorities are enrolled in a school, in state tuition and out of state tuition. Users have an option to limit the results they see.
+    - Returns the college, state, how many minorities are enrolled in a school, in state tuition and 
+      out of state tuition. Users have an option to limit the results they see.
 
   ## Grad Rate Query:
     - Options for input (Min Samples)
-    - Returns the state, average grad rate for the state, average full time undergrads for the state, average in state tuition, average out of state tuition and the average percent of people believing they made a difference. Users have the option to have a minimum amount of colleges for each state.
+    - Returns the state, average grad rate for the state, average full time undergrads for the state, 
+      average in state tuition, average out of state tuition and the average percent of people believing 
+      they made a difference. Users have the option to have a minimum amount of colleges for each state.
 
   ## Winning Enrolled Query:
     - Options for input (Win Percent, Enrolled)
-    - First returns the schools that have a win percent greater than a user inputed number for either football or basketball (using MongoDB). The next query returns the college, state, how many students are enrolled and if the school is public or private for schools that fulfilled the first queries. Users can choose what the win percent the sports team have to be greater than and what the number of students enrolled has to be greater than
+    - First returns the schools that have a win percent greater than a user inputed number for either 
+      football or basketball (using MongoDB). The next query returns the college, state, how many 
+      students are enrolled and if the school is public or private for schools that fulfilled the first
+      queries. Users can choose what the win percent the sports team have to be greater than and what 
+      the number of students enrolled has to be greater than
 
   ## Winning Tech Query:
     - Options for input (Limit, Power Rating, Offensive Rank)
-    - First returns the schools that have a Power Rating (How likely to beat a d1 team) and made the playoffs, or have a football team that has more wins than losses but have a certain offensive ranking. The next query returns the college, state, percent of professors with PhDs and the percent of students in stem for schools that fulfill the first queries. The user has the option to limit the results, choose the power rating and choose the offensive ranking.
+    - First returns the schools that have a Power Rating (How likely to beat a d1 team) and made the playoffs, 
+      or have a football team that has more wins than losses but have a certain offensive ranking. The next query 
+      returns the college, state, percent of professors with PhDs and the percent of students in stem for schools
+      that fulfill the first queries. The user has the option to limit the results, choose the power rating 
+      and choose the offensive ranking.
 
 
 # Challenges Faced:
