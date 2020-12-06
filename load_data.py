@@ -107,7 +107,7 @@ class SportsData:
 
     def insert_basketball(self, basketball_data):
         mycol = self.db['basketball']
-        self.insert_data(mycol, data)
+        self.insert_data(mycol, basketball_data)
 
     def insert_football(self, football_data):
         mycol = self.db['football']
@@ -115,31 +115,31 @@ class SportsData:
 
 if __name__ == '__main__':
     #PSQL
-    college = CollegeData(conn_string)
-
-    college.setUp()
-
-    college_df, student_df, statistic_df = utils.loaddata_college()
-    college.insert_college(college_df)
-    college.insert_student(student_df)
-    college.insert_statistic(statistic_df)
-
-    tuition_df = utils.loaddata_tuition()
-    college.insert_tuition(tuition_df)
-
-    historical_df = utils.loaddata_historical()
-    college.insert_historical(historical_df)
-
-    diversity_df = utils.loaddata_diversity()
-    college.insert_diversity(diversity_df)
-
-    salary_df = utils.loaddata_salary()
+    # college = CollegeData(conn_string)
+    #
+    # college.setUp()
+    #
+    # college_df, student_df, statistic_df = utils.loaddata_college()
+    # college.insert_college(college_df)
+    # college.insert_student(student_df)
+    # college.insert_statistic(statistic_df)
+    #
+    # tuition_df = utils.loaddata_tuition()
+    # college.insert_tuition(tuition_df)
+    #
+    # historical_df = utils.loaddata_historical()
+    # college.insert_historical(historical_df)
+    #
+    # diversity_df = utils.loaddata_diversity()
+    # college.insert_diversity(diversity_df)
+    #
+    # salary_df = utils.loaddata_salary()
     # college.insert_salary(salary_df)
 
     #Mongo
     sports = SportsData()
-    basketball_data = utils.loaddata_basketball()
-    sports.insert_basketball(basketball_data)
+    # basketball_data = utils.loaddata_basketball()
+    # sports.insert_basketball(basketball_data)
 
     football_data = utils.loaddata_football()
     sports.insert_football(football_data)
