@@ -120,6 +120,7 @@ def loaddata_football():
             football_df.at[i,'Team'] = football_df.at[i,'Team'][:index-1][:-1]
         data = {
             '_id' : i,
+            'Team' : football_df.at[i,'Team'],
             'Conference' : football_df.at[i,'Conference'],
             'Win' : football_df.at[i,'Win'],
             'Loss' : football_df.at[i,'Loss'],
