@@ -22,7 +22,7 @@ class CollegeData:
 
     def setUp(self):
         with self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
-            setup_queries = open('college-data.sql', 'r').read()
+            setup_queries = open('schema.sql', 'r').read()
             cursor.execute(setup_queries)
         self.conn.commit()
 
@@ -115,31 +115,31 @@ class SportsData:
 
 if __name__ == '__main__':
     #PSQL
-    # college = CollegeData(conn_string)
-    #
-    # college.setUp()
-    #
-    # college_df, student_df, statistic_df = utils.loaddata_college()
-    # college.insert_college(college_df)
-    # college.insert_student(student_df)
-    # college.insert_statistic(statistic_df)
-    #
-    # tuition_df = utils.loaddata_tuition()
-    # college.insert_tuition(tuition_df)
-    #
-    # historical_df = utils.loaddata_historical()
-    # college.insert_historical(historical_df)
-    #
-    # diversity_df = utils.loaddata_diversity()
-    # college.insert_diversity(diversity_df)
-    #
-    # salary_df = utils.loaddata_salary()
-    # college.insert_salary(salary_df)
+    college = CollegeData(conn_string)
+
+    college.setUp()
+
+    college_df, student_df, statistic_df = utils.loaddata_college()
+    college.insert_college(college_df)
+    college.insert_student(student_df)
+    college.insert_statistic(statistic_df)
+
+    tuition_df = utils.loaddata_tuition()
+    college.insert_tuition(tuition_df)
+
+    historical_df = utils.loaddata_historical()
+    college.insert_historical(historical_df)
+
+    diversity_df = utils.loaddata_diversity()
+    college.insert_diversity(diversity_df)
+
+    salary_df = utils.loaddata_salary()
+    college.insert_salary(salary_df)
 
     #Mongo
-    sports = SportsData()
+    # sports = SportsData()
     # basketball_data = utils.loaddata_basketball()
     # sports.insert_basketball(basketball_data)
 
-    football_data = utils.loaddata_football()
-    sports.insert_football(football_data)
+    # football_data = utils.loaddata_football()
+    # sports.insert_football(football_data)

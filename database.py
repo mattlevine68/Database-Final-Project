@@ -129,9 +129,9 @@ class CollegeQuery:
     def team_query(self, win_percent, enrolled):
         #Need defaults in case user does not put anything
         if not win_percent:
-            win_percent = .8
+            win_percent = .5
         if not enrolled:
-            enrolled = 5000
+            enrolled = 2000
         win_percent = float(win_percent)
         enrolled = int(enrolled)
 
@@ -141,11 +141,13 @@ class CollegeQuery:
         basketball_dict = self.query_mongo('basketball', my_query)
         football_dict = self.query_mongo('football', my_query)
         teams_set = set()
+        basketball_set = set()
+        football_set = set()
         for i in basketball_dict:
-            teams_set.add('%'+str(i['Team'])+'%')
+            basketball_set.add('%'+str(i['Team'])+'%')
         for i in football_dict:
-            teams_set.add('%'+str(i['Team'])+'%')
-        teams = list(teams_set)
+            football_set.add('%'+str(i['Team'])+'%')
+        teams = list(basketball_set.intersection(football_set))
 
         #PSQL query to see if results exist in tables along with user inputed enrolled and what type of school
         query = """
@@ -204,11 +206,13 @@ class CollegeQuery:
         basketball_dict = self.query_mongo('basketball', my_query_basketball)
         football_dict = self.query_mongo('football', my_query_football)
         teams_set = set()
+        basketball_set = set()
+        football_set = set()
         for i in basketball_dict:
-            teams_set.add('%'+str(i['Team'])+'%')
+            basketball_set.add('%'+str(i['Team'])+'%')
         for i in football_dict:
-            teams_set.add('%'+str(i['Team'])+'%')
-        teams = list(teams_set)
+            football_set.add('%'+str(i['Team'])+'%')
+        teams = list(basketball_set.intersection(football_set))
 
         #Option to limit results both queries check if a school that's true for either the football or basketball mongo query has professors with a phd or
         #students in stem

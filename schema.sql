@@ -63,7 +63,8 @@ CREATE TABLE college_salary(
 CREATE TABLE college_diversity(
     collegeid VARCHAR(127) REFERENCES college,
     diverse_group VARCHAR(127),
-    enrollment INT
+    enrollment INT,
+    PRIMARY KEY(collegeid, diverse_group)
 );
 
 GRANT ALL PRIVILEGES ON college, college_students, college_statistics, college_tuition, historical_tuition, college_salary, college_diversity TO project_user;
@@ -82,7 +83,8 @@ AS $$
 BEGIN
   IF EXISTS (SELECT collegeid FROM college WHERE collegeid = NEW.collegeid)
     THEN RETURN NEW;
-    ELSE RETURN NULL;
+    ELSE INSERT INTO college VALUES(NEW.collegeid, NULL);
+         RETURN NEW;
   END IF;
 END;
 $$ LANGUAGE plpgsql;
@@ -155,7 +157,7 @@ $$ LANGUAGE plpgsql;
 CREATE FUNCTION verify_new_diversity() RETURNS TRIGGER
 AS $$
 BEGIN
-  IF EXISTS (SELECT collegeid FROM college_diversity WHERE collegeid = NEW.collegeid)
+  IF EXISTS (SELECT collegeid FROM college_diversity WHERE collegeid = NEW.collegeid AND diverse_group = NEW.diverse_group)
     THEN RETURN NULL;
     ELSE RETURN NEW;
   END IF;
