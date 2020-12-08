@@ -1,8 +1,5 @@
 # Database Final Project
 
-# Submitted Files:
-  - Everything submitted goes in code folder, except requirements.txt if you prefer
-
 # Order to run code:
   1. Get requirements from requirements.txt downloaded
   2. db-setup.sql
