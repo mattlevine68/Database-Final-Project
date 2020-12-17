@@ -137,9 +137,9 @@ if __name__ == '__main__':
     college.insert_salary(salary_df)
 
     #Mongo
-    # sports = SportsData()
-    # basketball_data = utils.loaddata_basketball()
-    # sports.insert_basketball(basketball_data)
+    sports = SportsData()
+    basketball_data = utils.loaddata_basketball()
+    sports.insert_basketball(basketball_data)
 
-    # football_data = utils.loaddata_football()
-    # sports.insert_football(football_data)
+    football_data = utils.loaddata_football()
+    sports.insert_football(football_data)
