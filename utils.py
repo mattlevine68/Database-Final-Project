@@ -35,8 +35,8 @@ def loaddata_college():
     student_final_df = pd.merge(student_final_df,  salary_df, on='collegeid', how='left')
     student_final_df = student_final_df[['collegeid', 'Top10perc', 'Top25perc', 'F.Undergrad','P.Undergrad','Grad.Rate','stem_percent']]
     student_final_df = student_final_df.where(pd.notnull(student_final_df), None)
-    #
-    # #Data for college_statistics table
+    
+    #Data for college_statistics table
     statistics_final_df = college_df[['collegeid', 'Private', 'Apps', 'Accept', 'Enroll', 'PhD','Terminal']]
     statistics_final_df.Private.replace(to_replace=['Yes','No'], value=['Private', 'Public'],  inplace=True)
 
