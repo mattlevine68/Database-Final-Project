@@ -67,7 +67,8 @@ CREATE TABLE college_diversity(
     PRIMARY KEY(collegeid, diverse_group)
 );
 
-GRANT ALL PRIVILEGES ON college, college_students, college_statistics, college_tuition, historical_tuition, college_salary, college_diversity TO project_user;
+GRANT ALL PRIVILEGES ON college, college_students, college_statistics, college_tuition, 
+                        historical_tuition, college_salary, college_diversity TO project_user;
 
 DROP FUNCTION IF EXISTS verify_college;
 DROP FUNCTION IF EXISTS verify_new_college;
