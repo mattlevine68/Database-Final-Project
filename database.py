@@ -173,17 +173,17 @@ class CollegeQuery:
         # query average results of grad_rate, number of fulltime undergrads, in state tuition, out state tuition and students
         # who believe they are making a difference, allows user options to have a minimum of samples in each state
         query = """
-            SELECT c.state, ROUND(AVG(CAST(cs.grad_rate AS NUMERIC)),2) AS grad_rate_avg, ROUND(AVG(CAST(cs.fulltime_undergrad AS NUMERIC)),2) AS fulltime_undergrad_AVG,
-            ROUND(AVG(CAST(ct.in_state AS NUMERIC)),2) AS in_state_avg, ROUND(AVG(CAST(ct.out_of_state AS NUMERIC)),2) AS out_of_state_avg,
-            ROUND(AVG(CAST(csa.making_a_difference AS NUMERIC)),2) AS making_a_difference_avg
-            FROM college_students cs, college c, college_tuition ct, college_salary csa
-            WHERE c.collegeid = cs.collegeid
-            AND c.collegeid = ct.collegeid
-            AND c.collegeid = csa.collegeid
-            GROUP BY c.state
-            HAVING COUNT(cs.grad_rate) > %(samples)s
-            ORDER BY grad_rate_avg ASC;
-            """
+        SELECT c.state, ROUND(AVG(CAST(cs.grad_rate AS NUMERIC)),2) AS grad_rate_avg, ROUND(AVG(CAST(cs.fulltime_undergrad AS NUMERIC)),2) AS fulltime_undergrad_AVG,
+        ROUND(AVG(CAST(ct.in_state AS NUMERIC)),2) AS in_state_avg, ROUND(AVG(CAST(ct.out_of_state AS NUMERIC)),2) AS out_of_state_avg,
+        ROUND(AVG(CAST(csa.making_a_difference AS NUMERIC)),2) AS making_a_difference_avg
+        FROM college_students cs, college c, college_tuition ct, college_salary csa
+        WHERE c.collegeid = cs.collegeid
+        AND c.collegeid = ct.collegeid
+        AND c.collegeid = csa.collegeid
+        GROUP BY c.state
+        HAVING COUNT(cs.grad_rate) > %(samples)s
+        ORDER BY grad_rate_avg ASC;
+        """
         params = {'samples':  samples}
         worst_grad_results = self.query_with_params(query, params)
 
